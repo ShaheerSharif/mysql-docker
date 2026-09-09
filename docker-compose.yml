@@ -1,0 +1,33 @@
+name: laravel-mysql
+
+services:
+  # User is root by default
+  db:
+    image: dhi.io/mysql:9-debian-dev
+    restart: always
+    ports:
+      - "8001:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    command: mysqld
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.3-apache
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db
+    networks:
+      - backend
+
+volumes:
+  mysql-data:
+
+networks:
+  backend:
+
