@@ -29,15 +29,22 @@ services:
   cache:
     image: dhi.io/valkey:9
     restart: always
+    environment:
+      VALKEY_PASSWORD: "${VALKEY_PASSWORD}"
+      VALKEY_USER: "${VALKEY_USER:-root}"
     ports:
       - "${VALKEY_PORT:-8002:6380}"
     volumes:
       - "./config/valkey/valkey.conf:/tmp/valkey.conf:ro"
+      - "./entrypoints/init-valkey.sh:/usr/local/bin/entrypoint.sh"
+      - "valkey-data:/data"
+    command: valkey-server /tmp/valkey.conf
     networks:
       - backend
 
 volumes:
   mysql-data:
+  valkey-data:
 
 networks:
   backend:
