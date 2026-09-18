@@ -6,7 +6,7 @@ services:
     image: dhi.io/mysql:${MYSQL_VERSION:-9}
     restart: always
     ports:
-      - "8001:3306"
+      - "${MYSQL_PORT:-8001}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 1234
     command: mysqld
@@ -19,10 +19,20 @@ services:
     image: phpmyadmin:5.2.3-apache
     restart: always
     ports:
-      - "${PORT:-8080}:80"
+      - "${PHPMYADMIN_PORT:-8080}:80"
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=db
+    networks:
+      - backend
+
+  cache:
+    image: dhi.io/valkey:9
+    restart: always
+    ports:
+      - "${VALKEY_PORT:-8002:6380}"
+    volumes:
+      - "./config/valkey/valkey.conf:/tmp/valkey.conf:ro"
     networks:
       - backend
 
