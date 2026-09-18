@@ -3,7 +3,7 @@ name: laravel-mysql
 services:
   # User is root by default
   db:
-    image: dhi.io/mysql:9-debian-dev
+    image: dhi.io/mysql:${MYSQL_VERSION:-9}
     restart: always
     ports:
       - "8001:3306"
@@ -19,7 +19,7 @@ services:
     image: phpmyadmin:5.2.3-apache
     restart: always
     ports:
-      - "8080:80"
+      - "${PORT:-8080}:80"
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=db
