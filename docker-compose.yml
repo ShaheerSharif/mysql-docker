@@ -28,7 +28,7 @@ services:
         - VALKEY_VERSION=${VALKEY_VERSION}
     restart: always
     ports:
-      - "${VALKEY_PORT:-8003}:6380"
+      - "${VALKEY_PORT:-8002}:6380"
     secrets:
       - valkey_password
     volumes:
