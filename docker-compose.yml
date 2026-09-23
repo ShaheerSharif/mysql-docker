@@ -3,29 +3,36 @@ name: laravel-mysql
 services:
   # User is root by default
   db:
-    image: dhi.io/mysql:${MYSQL_VERSION:-9}
+    build:
+      context: .
+      dockerfile: docker/mysql.dockerfile
+      args:
+        - MYSQL_VERSION=${MYSQL_VERSION}
     restart: always
     ports:
       - "${MYSQL_PORT:-8001}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
     secrets:
       - mysql_root_password
-    command: mysqld
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
       - backend
 
   cache:
-    image: dhi.io/valkey:${VALKEY_VERSION:-9}
+    build:
+      context: .
+      dockerfile: docker/valkey.dockerfile
+      args:
+        - VALKEY_VERSION=${VALKEY_VERSION}
     restart: always
     ports:
       - "${VALKEY_PORT:-8003}:6380"
+    secrets:
+      - valkey_password
     volumes:
-      - "./config/valkey/valkey.conf:/tmp/valkey.conf:ro"
       - "valkey-data:/data"
-    command: valkey-server /tmp/valkey.conf
     networks:
       - backend
     healthcheck:
