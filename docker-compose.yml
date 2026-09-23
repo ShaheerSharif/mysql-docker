@@ -8,7 +8,9 @@ services:
     ports:
       - "${MYSQL_PORT:-8001}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    secrets:
+      - mysql_root_password
     command: mysqld
     volumes:
       - mysql-data:/var/lib/mysql
@@ -19,7 +21,7 @@ services:
     image: phpmyadmin:5.2.3-apache
     restart: always
     ports:
-      - "${PHPMYADMIN_PORT:-8080}:80"
+      - "${PHPMYADMIN_PORT:-8002}:80"
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=db
@@ -27,20 +29,38 @@ services:
       - backend
 
   cache:
-    image: dhi.io/valkey:9
+    image: dhi.io/valkey:${VALKEY_VERSION:-9}
     restart: always
-    environment:
-      VALKEY_PASSWORD: "${VALKEY_PASSWORD}"
-      VALKEY_USER: "${VALKEY_USER:-root}"
     ports:
-      - "${VALKEY_PORT:-8002:6380}"
+      - "${VALKEY_PORT:-8003}:6380"
     volumes:
       - "./config/valkey/valkey.conf:/tmp/valkey.conf:ro"
-      - "./entrypoints/init-valkey.sh:/usr/local/bin/entrypoint.sh"
       - "valkey-data:/data"
     command: valkey-server /tmp/valkey.conf
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "valkey-cli", "-p", "6380", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 4
+
+  valkey-admin:
+    image: valkey/valkey-admin:1.1.1
+    restart: always
+    environment:
+      DEPLOYMENT_MODE: "web"
+      VALKEY_HOST: "cache"
+      VALKEY_PORT: "6380"
+      VALKEY_AUTH_TYPE: none
+      VALKEY_TLS: false
+    ports:
+      - "${VALKEY_ADMIN_PORT:-8004}:8080"
+    networks:
+      - backend
+    depends_on:
+      cache:
+        condition: service_healthy
 
 volumes:
   mysql-data:
@@ -48,4 +68,10 @@ volumes:
 
 networks:
   backend:
+    driver: bridge
 
+secrets:
+  mysql_root_password:
+    environment: MYSQL_ROOT_PASSWORD
+  valkey_password:
+    environment: VALKEY_PASSWORD
